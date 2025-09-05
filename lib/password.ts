@@ -1,11 +1,11 @@
-import { hash as aHash, verify as aVerify } from 'argon2'
+import bcrypt from 'bcryptjs'
 
 export async function hashPassword(plain: string) {
-  return aHash(plain, { type: 2 })
+  return bcrypt.hash(plain, 12)
 }
 
 export async function verifyPassword(hash: string, plain: string) {
-  return aVerify(hash, plain)
+  return bcrypt.compare(plain, hash)
 }
 
 
