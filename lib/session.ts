@@ -1,7 +1,8 @@
-import { auth } from './auth'
+import { getServerSession } from 'next-auth'
+import { authConfig } from './auth'
 
 export async function requireSession() {
-  const session = await auth()
+  const session = await getServerSession(authConfig)
   if (!session?.user) throw new Error('UNAUTHORIZED')
   return session
 }
