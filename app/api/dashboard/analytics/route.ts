@@ -4,6 +4,8 @@ import { authConfig } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { categorizeTrafficSource } from '@/lib/analytics'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET(req: NextRequest) {
   try {
     // Проверяем аутентификацию
