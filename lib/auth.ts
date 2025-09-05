@@ -18,13 +18,19 @@ const signInSchema = z.object({ email: z.string().email(), password: z.string().
 export const authConfig: NextAuthOptions = {
   session: { strategy: 'jwt' },
   secret: process.env.NEXTAUTH_SECRET,
+  debug: process.env.NODE_ENV === 'development',
   providers: [
     Credentials({
       name: 'email-password',
       credentials: { email: {}, password: {} },
       async authorize(raw, request) {
+        console.log('NextAuth authorize called with:', { email: raw?.email })
+        
         const parsed = signInSchema.safeParse(raw)
-        if (!parsed.success) return null
+        if (!parsed.success) {
+          console.log('Schema validation failed:', parsed.error)
+          return null
+        }
         const { email, password } = parsed.data
 
         // Упрощаем IP получение для NextAuth v4
@@ -36,17 +42,34 @@ export const authConfig: NextAuthOptions = {
         if (fails >= 5) return null
 
         const user = await prisma.user.findUnique({ where: { email } })
-        if (!user || !user.passwordHash || !user.emailVerified) {
+        console.log('User found:', { id: user?.id, email: user?.email, hasPassword: !!user?.passwordHash, emailVerified: user?.emailVerified })
+        
+        if (!user || !user.passwordHash) {
+          console.log('User not found or no password hash')
           await prisma.failedLogin.create({ data: { email, ipHash } })
           await logAudit('auth.signin.fail', { email })
           return null
         }
+        
+        // Проверяем emailVerified только если это не null
+        if (user.emailVerified === null) {
+          console.log('Email not verified')
+          await prisma.failedLogin.create({ data: { email, ipHash } })
+          await logAudit('auth.signin.fail', { email })
+          return null
+        }
+        
         const ok = await verifyPassword(user.passwordHash, password)
+        console.log('Password verification result:', ok)
+        
         if (!ok) {
+          console.log('Password verification failed')
           await prisma.failedLogin.create({ data: { email, ipHash } })
           await logAudit('auth.signin.fail', { email })
           return null
         }
+        
+        console.log('Login successful for user:', user.email)
         await logAudit('auth.signin.success', { email }, user.id)
         return { id: user.id, email: user.email, name: user.email }
       },
@@ -96,8 +119,13 @@ export async function loginUser(email: string, password: string) {
       where: { email }
     })
     
-    if (!user || !user.passwordHash || !user.emailVerified) {
-      return { ok: false, error: 'Invalid credentials or email not verified' }
+    if (!user || !user.passwordHash) {
+      return { ok: false, error: 'Invalid credentials' }
+    }
+    
+    // Проверяем emailVerified только если это не null
+    if (user.emailVerified === null) {
+      return { ok: false, error: 'Email not verified' }
     }
     
     // Проверяем пароль
