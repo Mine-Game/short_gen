@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { authConfig } from '../../../../lib/auth'
-import { prisma } from '../../../../lib/prisma'
-import { categorizeTrafficSource } from '../../../../lib/analytics'
+import { authConfig } from '@/lib/auth'
+import { prisma } from '@/lib/prisma'
+import { categorizeTrafficSource } from '@/lib/analytics'
 
 export async function GET(req: NextRequest) {
   try {

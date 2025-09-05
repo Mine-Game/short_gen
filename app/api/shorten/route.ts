@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { authConfig } from '../../../lib/auth'
-import { prisma } from '../../../lib/prisma'
-import { generateId } from '../../../lib/store'
+import { authConfig } from '@/lib/auth'
+import { prisma } from '@/lib/prisma'
+import { generateId } from '@/lib/store'
 
 export async function POST(req: NextRequest) {
   try {

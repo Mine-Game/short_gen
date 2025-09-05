@@ -14,7 +14,7 @@ git init
 git add .
 git commit -m "Deploy Short Gen"
 git branch -M main
-git remote add origin https://github.com/your-username/short_gen.git
+git remote add origin https://github.com/Mine-Game/short_gen.git
 git push -u origin main
 ```
 
@@ -89,3 +89,66 @@ docker-compose exec app npx prisma db push
 Откройте issue в GitHub репозитории проекта.
 
 **Удачного деплоя! 🚀**
+
+## 📋 **Откуда взять переменные окружения:**
+
+### 1. **DATABASE_URL** ✅ (У вас есть!)
+```
+postgresql://neondb_owner:npg_2HOl5MzIswTV@ep-muddy-dust-ad80eciz-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
+```
+**Источник:** Из Neon.tech - вы уже получили этот connection string
+
+### 2. **NEXTAUTH_URL** 🔄 (Получите после деплоя)
+```
+https://your-app.vercel.app
+```
+**Что делать:** Сначала поставьте временное значение `https://short-gen.vercel.app`, после деплоя Vercel даст вам реальный URL
+
+### 3. **NEXTAUTH_SECRET** 🔐 (Сгенерируйте)
+Выполните в терминале:
+```bash
+openssl rand -base64 32
+```
+Или используйте онлайн генератор: [generate-secret.vercel.app](https://generate-secret.vercel.app)
+
+### 4. **EMAIL настройки** 📧 (Ваш Gmail)
+```
+EMAIL_SERVER_HOST = smtp.gmail.com
+EMAIL_SERVER_PORT = 587
+EMAIL_SERVER_USER = ваш-реальный-email@gmail.com
+EMAIL_FROM = ваш-реальный-email@gmail.com
+```
+
+### 5. **EMAIL_SERVER_PASSWORD** 🔑 (Пароль приложения Gmail)
+**Как получить:**
+1. Зайдите в [myaccount.google.com](https://myaccount.google.com)
+2. Безопасность → Двухфакторная аутентификация (включите если нет)
+3. Пароли приложений → Создать новый
+4. Скопируйте 16-значный пароль
+
+### 6. **NODE_ENV** ✅ (Готово)
+```
+NODE_ENV = production
+```
+
+### 7. **IP_HASH_SALT** 🧂 (Сгенерируйте)
+Любая случайная строка:
+```
+IP_HASH_SALT = my-super-secret-salt-12345
+```
+
+## 🚀 **Пример готовых переменных:**
+```env
+DATABASE_URL = postgresql://neondb_owner:npg_2HOl5MzIswTV@ep-muddy-dust-ad80eciz-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
+NEXTAUTH_URL = https://short-gen.vercel.app
+NEXTAUTH_SECRET = wJalrXUtnFEMI/K7MDENG/bPxRfiCYzEXAMPLEKEY
+EMAIL_SERVER_HOST = smtp.gmail.com
+EMAIL_SERVER_PORT = 587
+EMAIL_SERVER_USER = atreretrov@gmail.com
+EMAIL_FROM = atreretrov@gmail.com
+EMAIL_SERVER_PASSWORD = abcd efgh ijkl mnop
+NODE_ENV = production
+IP_HASH_SALT = my-random-salt-string-2024
+```
+
+**Начинайте деплой с временными значениями, потом обновите нужные!** 🎯
