@@ -1,0 +1,123 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id            String   @id @default(uuid())
+  email         String   @unique
+  emailVerified DateTime?
+  passwordHash  String
+  role          String   @default("user")
+  sessions      Session[]
+  passwordResets PasswordResetToken[]
+  shortLinks    ShortLink[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Session {
+  id            String   @id @default(cuid())
+  sessionToken  String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expires   DateTime
+  createdAt DateTime @default(now())
+}
+
+model VerificationToken {
+  identifier String
+  tokenHash  String
+  expires    DateTime
+  @@id([identifier, tokenHash])
+}
+
+model PasswordResetToken {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String
+  expires   DateTime
+  createdAt DateTime @default(now())
+}
+
+model FailedLogin {
+  id          String   @id @default(cuid())
+  email       String
+  ipHash      String
+  attemptedAt DateTime @default(now())
+}
+
+model ShortLink {
+  id          String   @id @default(cuid())
+  originalUrl String
+  shortId     String   @unique
+  userId      String?  // Делаем необязательным для публичных ссылок
+  user        User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  clicks      Int      @default(0)
+  
+  // UTM параметры для ссылки
+  utmSource    String?  // utm_source
+  utmMedium    String?  // utm_medium
+  utmCampaign  String?  // utm_campaign
+  utmTerm      String?  // utm_term
+  utmContent   String?  // utm_content
+  
+  clickAnalytics ClickAnalytics[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  actorId   String?
+  action    String
+  meta      Json?
+  createdAt DateTime @default(now())
+}
+
+model ClickAnalytics {
+  id           String   @id @default(cuid())
+  shortLinkId  String
+  shortLink    ShortLink @relation(fields: [shortLinkId], references: [id], onDelete: Cascade)
+  
+  // IP и информация о пользователе
+  ipHash       String   // Хэшированный IP для анонимности
+  userAgent    String?
+  
+  // География
+  country      String?
+  city         String?
+  region       String?
+  
+  // Источники трафика
+  referer      String?  // Откуда пришел пользователь
+  refererDomain String? // Домен источника
+  
+  // UTM метки
+  utmSource    String?  // utm_source
+  utmMedium    String?  // utm_medium
+  utmCampaign  String?  // utm_campaign
+  utmTerm      String?  // utm_term
+  utmContent   String?  // utm_content
+  
+  // Информация о браузере и устройстве
+  browser      String?
+  os           String?
+  device       String?  // mobile, desktop, tablet
+  
+  // Уникальность клика (на основе IP + User-Agent + временного окна)
+  isUnique     Boolean  @default(true)
+  
+  createdAt    DateTime @default(now())
+  
+  @@index([shortLinkId])
+  @@index([createdAt])
+  @@index([country])
+  @@index([refererDomain])
+}
+

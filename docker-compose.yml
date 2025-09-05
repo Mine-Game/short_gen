@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=postgresql://short_gen:password@postgres:5432/short_gen_db
+      - NEXTAUTH_URL=http://localhost:3000
+      - NEXTAUTH_SECRET=your-very-long-random-secret-key-for-development
+      - EMAIL_SERVER_HOST=smtp.gmail.com
+      - EMAIL_SERVER_PORT=587
+      - EMAIL_SERVER_USER=your-email@gmail.com
+      - EMAIL_SERVER_PASSWORD=your-app-password
+      - EMAIL_FROM=your-email@gmail.com
+      - NODE_ENV=production
+      - IP_HASH_SALT=your-random-salt-for-ip-hashing
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./prisma:/app/prisma
+
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_DB=short_gen_db
+      - POSTGRES_USER=short_gen
+      - POSTGRES_PASSWORD=password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U short_gen -d short_gen_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
